@@ -1,9 +1,99 @@
+import matplotlib
+matplotlib.use("TkAgg")
+import matplotlib.pyplot as plt
 import pandas as pd
 import tkinter as tk
 from prettytable import PrettyTable
 from tkinter import filedialog
 from tkinter import messagebox
 from tkcalendar import DateEntry
+
+
+def count_top_additional_information(file_path, start_date=None, end_date=None):
+    # Read in the alert data from a CSV file
+    df = pd.read_csv(file_path)
+
+    # Convert the 'Initial event generation time' column to datetime
+    df['Initial event generation time'] = pd.to_datetime(df['Initial event generation time'])
+
+    # Filter the data by date range, if provided
+    if start_date and end_date:
+        mask = (df['Initial event generation time'] >= start_date) & (df['Initial event generation time'] <= end_date)
+        df = df.loc[mask]
+
+    # Group the data by 'Additional information' and count the number of alerts
+    count_per_additional_info = df.groupby('Additional information')['Number'].count()
+
+    # Sort the counts in descending order and get the top 10
+    top_10_additional_info = count_per_additional_info.sort_values(ascending=False).head(10)
+
+    # Display the results in a table using PrettyTable
+    table = PrettyTable()
+    table.field_names = ["Additional Information", "Number of Alerts"]
+    for info, count in top_10_additional_info.items():
+        table.add_row([info, count])
+    print(table)
+
+
+
+def plot_alerts_per_node_day(file_path, start_date=None, end_date=None):
+    # Read in the alert data from a CSV file
+    df = pd.read_csv(file_path)
+
+    # Convert the 'Initial event generation time' column to datetime
+    df['Initial event generation time'] = pd.to_datetime(df['Initial event generation time'])
+
+    # Filter the data by date range, if provided
+    if start_date and end_date:
+        mask = (df['Initial event generation time'] >= start_date) & (df['Initial event generation time'] <= end_date)
+        df = df.loc[mask]
+
+    # Extract the day of the week from the 'Initial event generation time' column
+    df['Day of Week'] = df['Initial event generation time'].dt.day_name()
+
+    # Group the data by node and day of the week, then count the number of alerts
+    count_per_node_day = df.groupby(['Node', 'Day of Week'])['Number'].count().unstack()
+
+    # Fill NaN values with 0
+    count_per_node_day = count_per_node_day.fillna(0).astype(int)
+
+    # Create a bar plot using matplotlib
+    ax = count_per_node_day.plot(kind='bar', stacked=True, figsize=(10, 5))
+    ax.set_ylabel('Number of Alerts')
+    ax.set_title('Alerts per Node by Day of Week')
+
+    # Display the plot
+    plt.show()
+
+
+
+def count_alerts_per_node_day(file_path, start_date=None, end_date=None):
+    # Read in the alert data from a CSV file
+    df = pd.read_csv(file_path)
+
+    # Convert the 'Initial event generation time' column to datetime
+    df['Initial event generation time'] = pd.to_datetime(df['Initial event generation time'])
+
+    # Filter the data by date range, if provided
+    if start_date and end_date:
+        mask = (df['Initial event generation time'] >= start_date) & (df['Initial event generation time'] <= end_date)
+        df = df.loc[mask]
+
+    # Extract the day of the week from the 'Initial event generation time' column
+    df['Day of Week'] = df['Initial event generation time'].dt.day_name()
+
+    # Group the data by node and day of the week, then count the number of alerts
+    count_per_node_day = df.groupby(['Node', 'Day of Week'])['Number'].count().unstack()
+
+    # Fill NaN values with 0
+    count_per_node_day = count_per_node_day.fillna(0).astype(int)
+
+    # Display the results in a table using PrettyTable
+    table = PrettyTable()
+    table.field_names = ["Node"] + list(count_per_node_day.columns)
+    for node, row in count_per_node_day.iterrows():
+        table.add_row([node] + row.tolist())
+    print(table)
 
 ###### counts per cust
 def count_alerts_per_node(file_path, start_date=None, end_date=None):
@@ -39,8 +129,14 @@ def run_query():
     end_date = end_date_entry.get() if end_date_entry.get() else None
 
     try:
-        if query == 'Number of Alerts by Node' or query == 'Number of Alerts by Customer':
+        if query == 'Number of Alerts by Node':
             count_alerts_per_node(file_path, start_date, end_date)
+        elif query == 'Alerts by Node and Day':
+            count_alerts_per_node_day(file_path, start_date, end_date)
+        elif query == 'Plot Alerts by Node and Day':
+            plot_alerts_per_node_day(file_path, start_date, end_date)
+        elif query == 'Top 10 Additional Information':
+            count_top_additional_information(file_path, start_date, end_date)
         else:
             messagebox.showerror("Error", "Invalid query selected")
             return
@@ -50,13 +146,15 @@ def run_query():
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
-
 # Create the GUI window
 root = tk.Tk()
 root.title("Alert Query Tool")
 
+start_date_variable = tk.StringVar(root)
+end_date_variable = tk.StringVar(root)
+
 # Define the query options
-QUERY_OPTIONS = ["Number of Alerts by Node", "Number of Alerts by Customer"]
+QUERY_OPTIONS = ["Number of Alerts by Node", "Alerts by Node and Day", "Plot Alerts by Node and Day", "Top 10 Additional Information"]
 
 # create a variable to store the selected query
 query_variable = tk.StringVar(root)
@@ -85,12 +183,12 @@ browse_button.grid(column=2, row=1)
 # create entry widgets for start and end date using DateEntry
 start_date_label = tk.Label(root, text="Start date:")
 start_date_label.grid(column=0, row=2, sticky=tk.W)
-start_date_entry = DateEntry(root, width=12, background='darkblue', foreground='white', borderwidth=2)
+start_date_entry = DateEntry(root, width=12, background='darkblue', foreground='white', borderwidth=2, textvariable=start_date_variable)
 start_date_entry.grid(column=1, row=2)
 
 end_date_label = tk.Label(root, text="End date:")
 end_date_label.grid(column=0, row=3, sticky=tk.W)
-end_date_entry = DateEntry(root, width=12, background='darkblue', foreground='white', borderwidth=2)
+end_date_entry = DateEntry(root, width=12, background='darkblue', foreground='white', borderwidth=2, textvariable=end_date_variable)
 end_date_entry.grid(column=1, row=3)
 
 # Create the input fields
