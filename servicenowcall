@@ -1,0 +1,17 @@
+import urllib.request
+
+# Set up the URL and the file path to save the cab file
+url = 'https://<instance>.service-now.com/<cab_file_path>.cab'
+local_file_path = '/path/to/local/file.cab'
+
+# Set up the credentials for Basic Authentication
+username = 'your_username'
+password = 'your_password'
+p = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+p.add_password(None, url, username, password)
+auth_handler = urllib.request.HTTPBasicAuthHandler(p)
+opener = urllib.request.build_opener(auth_handler)
+urllib.request.install_opener(opener)
+
+# Download the cab file from the URL
+urllib.request.urlretrieve(url, local_file_path)
