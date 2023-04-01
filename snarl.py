@@ -9,6 +9,38 @@ from tkinter import messagebox
 from tkcalendar import DateEntry
 
 
+def Heat_count_alerts_per_node_hour(file_path, start_date=None, end_date=None):
+    # Read in the alert data from a CSV file
+    df = pd.read_csv(file_path)
+
+    # Convert the 'Initial event generation time' column to datetime
+    df['Initial event generation time'] = pd.to_datetime(df['Initial event generation time'])
+
+    # Filter the data by date range, if provided
+    if start_date and end_date:
+        mask = (df['Initial event generation time'] >= start_date) & (df['Initial event generation time'] <= end_date)
+        df = df.loc[mask]
+
+    # Extract the hour of the day from the 'Initial event generation time' column
+    df['Hour of Day'] = df['Initial event generation time'].dt.hour
+
+    # Group the data by node and hour of the day, then count the number of alerts
+    count_per_node_hour = df.groupby(['Node', 'Hour of Day'])['Number'].count().unstack()
+
+    # Fill NaN values with 0
+    count_per_node_hour = count_per_node_hour.fillna(0).astype(int)
+
+    # Plot a heatmap of the results
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(count_per_node_hour, annot=True, fmt='d')
+    plt.xlabel("Hour of Day")
+    plt.ylabel("Node")
+    plt.title("Number of Alerts per Node per Hour of Day")
+    plt.show()
+
+
+
+
 def count_top_additional_information(file_path, start_date=None, end_date=None):
     # Read in the alert data from a CSV file
     df = pd.read_csv(file_path)
@@ -137,6 +169,8 @@ def run_query():
             plot_alerts_per_node_day(file_path, start_date, end_date)
         elif query == 'Top 10 Additional Information':
             count_top_additional_information(file_path, start_date, end_date)
+        elif query == 'Heat Map of Alerts By Customer By Hour':
+            Heat_count_alerts_per_node_hour((file_path, start_date, end_date)
         else:
             messagebox.showerror("Error", "Invalid query selected")
             return
@@ -154,7 +188,7 @@ start_date_variable = tk.StringVar(root)
 end_date_variable = tk.StringVar(root)
 
 # Define the query options
-QUERY_OPTIONS = ["Number of Alerts by Node", "Alerts by Node and Day", "Plot Alerts by Node and Day", "Top 10 Additional Information"]
+QUERY_OPTIONS = ["Number of Alerts by Node", "Alerts by Node and Day", "Plot Alerts by Node and Day", "Top 10 Additional Information", "Heat Map of Alerts By Customer By Hour"]
 
 # create a variable to store the selected query
 query_variable = tk.StringVar(root)
