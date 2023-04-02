@@ -7,6 +7,7 @@ from prettytable import PrettyTable
 from tkinter import filedialog
 from tkinter import messagebox
 from tkcalendar import DateEntry
+import seaborn as sns
 
 
 def Heat_count_alerts_per_node_hour(file_path, start_date=None, end_date=None):
@@ -170,7 +171,7 @@ def run_query():
         elif query == 'Top 10 Additional Information':
             count_top_additional_information(file_path, start_date, end_date)
         elif query == 'Heat Map of Alerts By Customer By Hour':
-            Heat_count_alerts_per_node_hour((file_path, start_date, end_date)
+            Heat_count_alerts_per_node_hour(file_path, start_date, end_date)
         else:
             messagebox.showerror("Error", "Invalid query selected")
             return
