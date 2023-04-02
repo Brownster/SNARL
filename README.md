@@ -20,3 +20,5 @@ pip install tkcalendar
 Usage
 
 To run the application, execute the Python script in your Python environment, and the GUI should appear. Users can then select a query, choose a CSV file, specify a date range (if desired), and see the results in a table format. If there are any issues with the file or the selected query, the application will display an error message.
+![Screenshot from 2023-04-02 10-25-55](https://user-images.githubusercontent.com/6543166/229344362-2e2b67c7-4e40-4aa2-8157-10df81eba4f3.png)
+![Screenshot from 2023-04-02 10-26-38](https://user-images.githubusercontent.com/6543166/229344363-4ba7cd9b-afd2-4159-be22-b2ebfa5ddff4.png)
